@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompthound"
+version = "0.1.0"
+description = "Static analyzer that hunts insecure AI/LLM integration patterns in your codebase."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "ViperDroid" }]
+keywords = ["llm", "ai", "security", "static-analysis", "prompt-injection", "sast", "appsec", "llmsecurity"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security",
+    "Environment :: Console",
+]
+
+[project.urls]
+Homepage = "https://github.com/ViperDroid/prompthound"
+Issues = "https://github.com/ViperDroid/prompthound/issues"
+
+[project.scripts]
+prompthound = "prompthound.cli:main"
+
+[tool.setuptools]
+packages = ["prompthound"]
