@@ -39,8 +39,78 @@ def build_parser():
         help="Only report findings at or above this severity (default: LOW)",
     )
     parser.add_argument("--no-color", action="store_true", help="Disable colored output")
+    parser.add_argument(
+        "--sarif",
+        action="store_true",
+        help="Output findings in SARIF 2.1.0 (for GitHub code scanning / Security tab)",
+    )
+    parser.add_argument(
+        "--list-rules", action="store_true", help="List all detection rules and exit"
+    )
     parser.add_argument("--version", action="version", version=f"prompthound {__version__}")
     return parser
+
+
+_SARIF_LEVEL = {"CRITICAL": "error", "HIGH": "error", "MEDIUM": "warning", "LOW": "note"}
+
+
+def _to_sarif(findings):
+    rules_seen = {}
+    results = []
+    for f in findings:
+        r = f["rule"]
+        rules_seen[r["id"]] = r
+        results.append(
+            {
+                "ruleId": r["id"],
+                "level": _SARIF_LEVEL[r["severity"]],
+                "message": {"text": f"{r['title']}: {r['why']}"},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": f["file"]},
+                            "region": {"startLine": f["line"]},
+                        }
+                    }
+                ],
+            }
+        )
+    driver_rules = [
+        {
+            "id": r["id"],
+            "name": r["title"],
+            "shortDescription": {"text": r["title"]},
+            "fullDescription": {"text": r["why"]},
+            "defaultConfiguration": {"level": _SARIF_LEVEL[r["severity"]]},
+        }
+        for r in rules_seen.values()
+    ]
+    return {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "prompthound",
+                        "version": __version__,
+                        "informationUri": "https://github.com/ViperDroid/prompthound",
+                        "rules": driver_rules,
+                    }
+                },
+                "results": results,
+            }
+        ],
+    }
+
+
+def _print_rules():
+    from .rules import RULES
+
+    for r in RULES:
+        langs = "all" if r["langs"] == "*" else "/".join(sorted(r["langs"]))
+        print(f"{r['id']}  [{r['severity']:<8}] ({langs:<5}) {r['title']}")
+    return 0
 
 
 def _to_dict(f):
@@ -60,10 +130,17 @@ def _to_dict(f):
 def main(argv=None):
     args = build_parser().parse_args(argv)
 
+    if args.list_rules:
+        return _print_rules()
+
     findings = scan_path(args.path)
     threshold = SEV_ORDER[args.min_severity]
     findings = [f for f in findings if SEV_ORDER[f["rule"]["severity"]] >= threshold]
     findings.sort(key=lambda f: (-SEV_ORDER[f["rule"]["severity"]], f["file"], f["line"]))
+
+    if args.sarif:
+        print(json.dumps(_to_sarif(findings), indent=2))
+        return 1 if findings else 0
 
     if args.json:
         print(json.dumps([_to_dict(f) for f in findings], indent=2))

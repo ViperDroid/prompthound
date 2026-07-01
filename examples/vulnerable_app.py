@@ -28,4 +28,10 @@ def handle(request, cursor):
     cfg = yaml.load(answer)                        # PH013
     print("full prompt:", prompt)                  # PH014
     requests.get("https://api.example.com", verify=False)  # PH010
-    return obj, cfg
+    requests.get(answer)                           # PH016 (dynamic URL -> SSRF)
+    html = render_template_string(answer)          # PH017 (SSTI)
+    app.run(debug=True)                            # PH018
+    aws_key = "AKIA1234567890ABCDEF"               # PH019
+    dangerous = eval(user_q)  # prompthound: ignore  (demo: suppressed line)
+    return obj, cfg, html
+

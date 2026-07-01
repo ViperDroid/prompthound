@@ -12,6 +12,9 @@ SKIP_DIRS = {
 }
 MAX_BYTES = 1_000_000  # skip files larger than 1 MB
 
+# Lines containing this marker are skipped, e.g.  eval(x)  # prompthound: ignore
+SUPPRESS_MARKERS = ("prompthound: ignore", "prompthound:ignore")
+
 
 def language_for(path):
     return EXT_LANG.get(path.suffix.lower())
@@ -52,6 +55,8 @@ def scan_path(root):
             continue
 
         for lineno, line in enumerate(text.splitlines(), start=1):
+            if any(marker in line for marker in SUPPRESS_MARKERS):
+                continue
             for rule in COMPILED_RULES:
                 if rule["langs"] != "*" and lang not in rule["langs"]:
                     continue

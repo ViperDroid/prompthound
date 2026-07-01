@@ -16,10 +16,14 @@ Runtime scanners (garak, promptfoo, PyRIT) test your *running model*. **promptho
 
 ## 🎬 Demo
 
+<p align="center">
+  <img src="docs/terminal.svg" alt="prompthound output" width="90%">
+</p>
+
 ```console
 $ prompthound examples/
 
-🐶 prompthound  v0.1.0
+🐶 prompthound  v0.2.0
    scanning examples/
 
  CRITICAL  PH001  Hardcoded AI provider API key
@@ -40,10 +44,16 @@ $ prompthound examples/
    why: If model output is rendered here without encoding, the model can emit active HTML/JS -> XSS.
    fix: Render model output as text, or sanitize with a vetted library (e.g. DOMPurify).
 
- ... 16 more ...
+ ... 20 more ...
 
-✗ 19 findings  (4 critical, 10 high, 4 medium, 1 low)
+✗ 23 findings  (5 critical, 11 high, 6 medium, 1 low)
 ```
+
+## ⚙️ How it works
+
+<p align="center">
+  <img src="docs/flow.svg" alt="how prompthound works" width="95%">
+</p>
 
 ## 🔎 What it catches
 
@@ -60,9 +70,14 @@ $ prompthound examples/
 | PH007 | 🟡 MEDIUM | Prompt/query built from raw web-request input |
 | PH013 | 🟡 MEDIUM | Unsafe `yaml.load` |
 | PH015 | 🟡 MEDIUM | Redirect/navigation sink (open redirect) |
+| PH016 | 🟡 MEDIUM | Possible SSRF sink (dynamic request URL) |
+| PH017 | 🔴 HIGH | Server-side template injection (`render_template_string`) |
+| PH018 | 🟡 MEDIUM | Debug mode enabled (Flask/Werkzeug console → RCE) |
+| PH019 | 🟣 CRITICAL | Hardcoded cloud credential (`AKIA…`) |
+| PH020 | 🔴 HIGH | More LLM→HTML sinks (`insertAdjacentHTML`, `outerHTML`) |
 | PH014 | 🔵 LOW | Prompts / secrets written to logs |
 
-Covers **Python** and **JavaScript / TypeScript**.
+**20 rules** across **Python** and **JavaScript / TypeScript** — run `prompthound --list-rules` to see them all.
 
 ## 📦 Install
 
@@ -87,9 +102,17 @@ prompthound                       # scan current directory
 prompthound path/to/project       # scan a folder or file
 prompthound . --min-severity HIGH # only HIGH and CRITICAL
 prompthound . --json              # machine-readable output for tooling
+prompthound . --sarif             # SARIF 2.1.0 for GitHub code scanning
+prompthound --list-rules          # show every detection rule
 ```
 
 Exit code is **1** when findings are reported (at or above `--min-severity`) and **0** when clean — so it drops straight into CI.
+
+**Silence a false positive** with an inline marker:
+
+```python
+dangerous = eval(trusted_input)  # prompthound: ignore
+```
 
 ## 🤖 Use in CI (GitHub Actions)
 
@@ -98,6 +121,16 @@ Exit code is **1** when findings are reported (at or above `--min-severity`) and
   with: { python-version: "3.x" }
 - run: pip install prompthound
 - run: prompthound . --min-severity HIGH   # fails the build on HIGH/CRITICAL
+```
+
+Or surface findings in the repo's **Security → Code scanning** tab via SARIF:
+
+```yaml
+- run: pip install prompthound
+- run: prompthound . --sarif > prompthound.sarif || true
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: prompthound.sarif
 ```
 
 ## 🧠 How it works (and its limits)
