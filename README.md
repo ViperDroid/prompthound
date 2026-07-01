@@ -28,7 +28,7 @@ $ prompthound examples/
 
  CRITICAL  PH001  Hardcoded AI provider API key
    examples/vulnerable_app.py:10
-     openai.api_key = "sk-abcdefghijklmnopqrstuvwxyz0123456789ABCD"
+     openai.api_key = "sk-FAKEexamplekey…"
    why: An LLM/API key is hardcoded in source. Anyone with repo access can use it.
    fix: Load keys from environment variables or a secrets manager; rotate any exposed key.
 

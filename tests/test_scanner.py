@@ -6,9 +6,9 @@ def _ids(path):
 
 
 def test_detects_hardcoded_key(tmp_path):
-    (tmp_path / "a.py").write_text(
-        'openai.api_key = "sk-abcdefghijklmnopqrstuvwxyz0123456789ABCD"\n'
-    )
+    # Build the fake key from fragments so no literal secret is committed to source.
+    fake_key = "sk-" + "fake" + "examplekey" * 3 + "0123456789"
+    (tmp_path / "a.py").write_text('openai.api_key = "%s"\n' % fake_key)
     assert "PH001" in _ids(tmp_path)
 
 

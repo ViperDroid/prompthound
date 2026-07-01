@@ -2,7 +2,7 @@
 const cp = require("child_process"); // PH005
 const https = require("https");
 
-const OPENAI_API_KEY = "sk-1234567890abcdefghijklmnopqrstuvwxyz1234"; // PH001
+const OPENAI_API_KEY = "sk-FAKEjstestkeyDONOTUSE0123456789abcdef"; // PH001 (obviously-fake demo key)
 
 async function handle(req, res, el, container) {
   const answer = await callLLM(`Answer the user: ${req.body.q}`);

@@ -7,7 +7,7 @@ import openai
 import requests
 import yaml
 
-openai.api_key = "sk-abcdefghijklmnopqrstuvwxyz0123456789ABCD"  # PH001
+openai.api_key = "sk-FAKEexamplekeyDONOTUSE0123456789abcd"  # PH001 (obviously-fake demo key)
 
 
 def handle(request, cursor):
